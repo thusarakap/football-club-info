@@ -14,14 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.thusarakap.fbclubinfo.database.SaveInitialLeagues
 
 object MainMenu {
-    const val Screen1Route = "Screen1"
-    const val Screen2Route = "Screen2"
+    const val MainMenuRoute = "MainMenu"
+    const val SearchByLeagueUIRoute = "SearchByLeagueUI"
     const val Screen3Route = "Screen3"
 }
 
@@ -33,7 +31,7 @@ fun MainMenu(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(
-            onClick = { navController.navigate(MainMenu.Screen1Route) },
+            onClick = {SaveInitialLeagues()},
             modifier = Modifier.width(250.dp)) {
             Text("Add Leagues to DB")
         }
@@ -41,7 +39,7 @@ fun MainMenu(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { navController.navigate(MainMenu.Screen2Route) },
+            onClick = { navController.navigate(MainMenu.SearchByLeagueUIRoute) },
             modifier = Modifier.width(250.dp)) {
             Text("Search for Clubs By League")
         }
