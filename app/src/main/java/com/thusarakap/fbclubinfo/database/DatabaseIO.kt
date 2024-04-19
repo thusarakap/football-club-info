@@ -14,6 +14,7 @@ import androidx.room.Room
 
 object DatabaseIO {
     private lateinit var leagueDao: LeagueDao
+    private lateinit var clubDao: ClubDao
 
     fun initialize(context: Context) {
         val db = Room.databaseBuilder(
@@ -21,6 +22,7 @@ object DatabaseIO {
             AppDatabase::class.java, "fb-club-info-db"
         ).build()
         leagueDao = db.leagueDao()
+        clubDao = db.clubDao()
     }
 
     suspend fun addLeaguesToDB(leagues: List<League>) {
@@ -28,6 +30,17 @@ object DatabaseIO {
             leagueDao.insertLeague(league)
             Log.d("DatabaseIO", "Added league: $league")
         }
+    }
+
+    suspend fun addClubsToDB(clubs: List<Club>) {
+        for (club in clubs) {
+            clubDao.insertClub(club)
+            Log.d("DatabaseIO", "Added club: $club")
+        }
+    }
+
+    suspend fun searchClubsByNameOrLeague(query: String): List<Club> {
+        return clubDao.searchByNameOrLeague("%${query.toLowerCase()}%")
     }
 }
 
@@ -39,6 +52,25 @@ data class League(
     @ColumnInfo(name = "AltName") val strLeagueAlternate: String
 )
 
+@Entity(tableName = "clubs")
+data class Club(
+    @PrimaryKey val idTeam: String,
+    val name: String,
+    val strTeamShort: String,
+    val strAlternate: String,
+    val intFormedYear: String,
+    val strLeague: String,
+    val idLeague: String,
+    val strStadium: String,
+    val strKeywords: String,
+    val strStadiumThumb: String,
+    val strStadiumLocation: String,
+    val intStadiumCapacity: String,
+    val strWebsite: String,
+    val strTeamJersey: String,
+    val strTeamLogo: String
+)
+
 @Dao
 interface LeagueDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -46,4 +78,13 @@ interface LeagueDao {
 
     @Query("SELECT * FROM leagues")
     suspend fun getAllLeagues(): List<League>
+}
+
+@Dao
+interface ClubDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertClub(club: Club)
+
+    @Query("SELECT * FROM clubs WHERE LOWER(name) LIKE :query OR LOWER(strLeague) LIKE :query")
+    suspend fun searchByNameOrLeague(query: String): List<Club>
 }
