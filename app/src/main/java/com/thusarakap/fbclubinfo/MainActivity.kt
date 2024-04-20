@@ -10,6 +10,8 @@ import androidx.navigation.compose.rememberNavController
 import com.thusarakap.fbclubinfo.database.DatabaseIO
 import com.thusarakap.fbclubinfo.ui.theme.FbClubInfoTheme
 import com.thusarakap.fbclubinfo.searchbyleague.SearchByLeagueUI
+import com.thusarakap.fbclubinfo.searchforclubs.SearchForClubsUI
+import com.thusarakap.fbclubinfo.webjerseysearch.WebJerseySearchUI
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,6 +28,8 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = MainMenu.MainMenuRoute) {
                     composable(MainMenu.MainMenuRoute) { MainMenu(navController) }
                     composable(MainMenu.SearchByLeagueUIRoute) { SearchByLeagueUI(navController) }
+                    composable(MainMenu.SearchForClubsUIRoute) { SearchForClubsUI(navController) }
+                    composable(MainMenu.WebJerseySearchUIRoute) { WebJerseySearchUI(navController) }
                 }
             }
         }
