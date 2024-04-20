@@ -20,7 +20,8 @@ import com.thusarakap.fbclubinfo.database.SaveInitialLeagues
 object MainMenu {
     const val MainMenuRoute = "MainMenu"
     const val SearchByLeagueUIRoute = "SearchByLeagueUI"
-    const val Screen3Route = "Screen3"
+    const val SearchForClubsUIRoute = "SearchForClubsUI"
+    const val WebJerseySearchUIRoute = "WebJerseySearchUI"
 }
 
 @Composable
@@ -47,9 +48,17 @@ fun MainMenu(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { navController.navigate(MainMenu.Screen3Route) },
+            onClick = { navController.navigate(MainMenu.SearchForClubsUIRoute) },
             modifier = Modifier.width(250.dp)) {
             Text("Search for Clubs")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = { navController.navigate(MainMenu.WebJerseySearchUIRoute) },
+            modifier = Modifier.width(250.dp)) {
+            Text("Search for Jerseys Online")
         }
     }
 }
