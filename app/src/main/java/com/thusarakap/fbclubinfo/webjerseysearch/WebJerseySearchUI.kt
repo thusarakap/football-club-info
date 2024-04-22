@@ -2,11 +2,11 @@ package com.thusarakap.fbclubinfo.webjerseysearch
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.os.AsyncTask
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -19,26 +19,29 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
 import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.FileNotFoundException
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
 import java.net.URL
 
 @Composable
 fun WebJerseySearchUI(navController: NavController) {
     var searchText by rememberSaveable { mutableStateOf("") }
     var matchingTeams by remember { mutableStateOf<List<TeamWithJersey>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        Spacer(modifier = Modifier.height(60.dp))
+
         Text("Search for Jerseys Online")
+
+        Spacer(modifier = Modifier.height(15.dp))
 
         OutlinedTextField(
             value = searchText,
@@ -46,12 +49,16 @@ fun WebJerseySearchUI(navController: NavController) {
             label = { Text("Enter Club Name or League") }
         )
 
+        Spacer(modifier = Modifier.height(15.dp))
+
         Button(
             onClick = {
                 // Perform search when button is clicked
-                SearchJerseysTask(searchText) { teams ->
+                isLoading = true
+                searchJerseys(searchText) { teams ->
                     matchingTeams = teams
-                }.execute()
+                    isLoading = false
+                }
             },
             modifier = Modifier.width(250.dp)
         ) {
@@ -60,13 +67,20 @@ fun WebJerseySearchUI(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Display matching team names, IDs, and jersey thumbnails
-        Column {
-            matchingTeams.forEach { team ->
-                Text(team.teamName)
-                Row {
-                    team.jerseyImageUrls.forEach { imageUrl ->
-                        LoadImageFromUrl(imageUrl = imageUrl)
+        // Display loading indicator if search is in progress
+        if (isLoading) {
+            Spacer(modifier = Modifier.height(250.dp))
+            CircularProgressIndicator(modifier = Modifier.size(50.dp))
+        } else {
+            // Display matching team names, IDs, and jersey thumbnails
+            Column {
+                matchingTeams.forEach { team ->
+                    Spacer(modifier = Modifier.width(20.dp))
+                    Text(team.teamName)
+                    Row {
+                        team.jerseyImageUrls.forEach { imageUrl ->
+                            LoadImageFromUrl(imageUrl = imageUrl)
+                        }
                     }
                 }
             }
@@ -109,18 +123,14 @@ private suspend fun fetchImageBitmap(url: String): Bitmap? {
     }
 }
 
-
-class SearchJerseysTask(
-    private val query: String,
-    private val callback: (List<TeamWithJersey>) -> Unit
-) : AsyncTask<Void, Void, List<TeamWithJersey>>() {
-
-    override fun doInBackground(vararg params: Void?): List<TeamWithJersey> {
+private fun searchJerseys(query: String, callback: (List<TeamWithJersey>) -> Unit) {
+    // Run the coroutine in a background thread
+    CoroutineScope(Dispatchers.IO).launch {
         val matchingTeams = mutableListOf<TeamWithJersey>()
-
         try {
             // Step 1: Retrieve all countries
             val countriesUrl = "https://www.thesportsdb.com/api/v1/json/3/all_countries.php"
+            Log.d(TAG, "Fetching countries from: $countriesUrl")
             val countriesResponse = URL(countriesUrl).readText()
             val countries = JSONObject(countriesResponse).getJSONArray("countries")
 
@@ -130,6 +140,7 @@ class SearchJerseysTask(
 
                 // Step 2: Search for teams by country and sport
                 val teamsUrl = "https://www.thesportsdb.com/api/v1/json/3/search_all_teams.php?s=Soccer&c=$countryName"
+                Log.d(TAG, "Fetching teams for country: $countryName from: $teamsUrl")
                 val teamsResponse = URL(teamsUrl).readText()
 
                 val teamsJson = JSONObject(teamsResponse)
@@ -155,37 +166,29 @@ class SearchJerseysTask(
             Log.e(TAG, "Error occurred during background task", e)
         }
 
-        return matchingTeams
-    }
-
-    private fun fetchJerseyImageUrls(teamId: String): List<String> {
-        val jerseyUrl = "https://www.thesportsdb.com/api/v1/json/3/lookupequipment.php?id=$teamId"
-        val jerseyResponse = URL(jerseyUrl).readText()
-        val jerseysJson = JSONObject(jerseyResponse).optJSONArray("equipment")
-        val jerseyUrls = mutableListOf<String>()
-        jerseysJson?.let { jsonArray ->
-            for (i in 0 until jsonArray.length()) {
-                val jersey = jsonArray.getJSONObject(i)
-                val imageUrl = jersey.getString("strEquipment")
-                jerseyUrls.add(imageUrl)
-            }
+        // Update UI on the main thread
+        withContext(Dispatchers.Main) {
+            callback(matchingTeams)
         }
-        return jerseyUrls
     }
+}
 
-
-
-    companion object {
-        private const val TAG = "SearchJerseysTask"
+private fun fetchJerseyImageUrls(teamId: String): List<String> {
+    val jerseyUrl = "https://www.thesportsdb.com/api/v1/json/3/lookupequipment.php?id=$teamId"
+    Log.d(TAG, "Fetching jersey image URLs from: $jerseyUrl")
+    val jerseyResponse = URL(jerseyUrl).readText()
+    val jerseysJson = JSONObject(jerseyResponse).optJSONArray("equipment")
+    val jerseyUrls = mutableListOf<String>()
+    jerseysJson?.let { jsonArray ->
+        for (i in 0 until jsonArray.length()) {
+            val jersey = jsonArray.getJSONObject(i)
+            val imageUrl = jersey.getString("strEquipment")
+            jerseyUrls.add(imageUrl)
+        }
     }
-
-    override fun onPostExecute(result: List<TeamWithJersey>) {
-        super.onPostExecute(result)
-        callback(result)
-    }
+    return jerseyUrls
 }
 
 data class TeamWithJersey(val teamName: String, val jerseyImageUrls: List<String>)
 
-
-
+private const val TAG = "WebJerseySearch"
