@@ -1,5 +1,6 @@
 package com.thusarakap.fbclubinfo.webjerseysearch
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.AsyncTask
 import android.util.Log
@@ -12,9 +13,14 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedReader
@@ -26,7 +32,7 @@ import java.net.URL
 @Composable
 fun WebJerseySearchUI(navController: NavController) {
     var searchText by rememberSaveable { mutableStateOf("") }
-    var matchingTeams by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
+    var matchingTeams by remember { mutableStateOf<List<TeamWithJersey>>(emptyList()) }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -54,37 +60,63 @@ fun WebJerseySearchUI(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Display matching team names
+        // Display matching team names, IDs, and jersey thumbnails
         Column {
             matchingTeams.forEach { team ->
-                Text("${team.first} (ID: ${team.second})")
+                Text(team.teamName)
+                Row {
+                    team.jerseyImageUrls.forEach { imageUrl ->
+                        LoadImageFromUrl(imageUrl = imageUrl)
+                    }
+                }
             }
         }
     }
 }
 
+@Composable
+fun LoadImageFromUrl(imageUrl: String) {
+    var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 
-//@Composable
-//fun rememberImagePainter(url: String): BitmapPainter {
-//    return remember(url) {
-//        val imageUrl = URL(url)
-//        val connection = imageUrl.openConnection() as HttpURLConnection
-//        connection.doInput = true
-//        connection.connect()
-//        val inputStream = connection.inputStream
-//        val bitmap = BitmapFactory.decodeStream(inputStream)
-//        inputStream.close()
-//        BitmapPainter(bitmap)
-//    }
-//}
+    LaunchedEffect(imageUrl) {
+        try {
+            val bitmap = withContext(Dispatchers.IO) {
+                fetchImageBitmap(imageUrl)
+            }
+            imageBitmap = bitmap?.asImageBitmap()
+        } catch (e: Exception) {
+            // Handle errors, e.g., log or show a placeholder image
+            e.printStackTrace()
+        }
+    }
+
+    imageBitmap?.let {
+        Image(
+            painter = remember { BitmapPainter(it) },
+            contentDescription = null,
+            modifier = Modifier.size(100.dp),
+            contentScale = ContentScale.Fit
+        )
+    }
+}
+
+private suspend fun fetchImageBitmap(url: String): Bitmap? {
+    return try {
+        val inputStream = URL(url).openStream()
+        BitmapFactory.decodeStream(inputStream)
+    } catch (e: Exception) {
+        null
+    }
+}
+
 
 class SearchJerseysTask(
     private val query: String,
-    private val callback: (List<Pair<String, String>>) -> Unit
-) : AsyncTask<Void, Void, List<Pair<String, String>>>() {
+    private val callback: (List<TeamWithJersey>) -> Unit
+) : AsyncTask<Void, Void, List<TeamWithJersey>>() {
 
-    override fun doInBackground(vararg params: Void?): List<Pair<String, String>> {
-        val matchingTeams = mutableListOf<Pair<String, String>>()
+    override fun doInBackground(vararg params: Void?): List<TeamWithJersey> {
+        val matchingTeams = mutableListOf<TeamWithJersey>()
 
         try {
             // Step 1: Retrieve all countries
@@ -111,7 +143,8 @@ class SearchJerseysTask(
                         // Check if the team name contains the query string
                         if (teamName.contains(query, ignoreCase = true)) {
                             val teamId = team.getString("idTeam")
-                            matchingTeams.add(Pair(teamName, teamId))
+                            val jerseyImageUrls = fetchJerseyImageUrls(teamId)
+                            matchingTeams.add(TeamWithJersey(teamName, jerseyImageUrls))
                         }
                     }
                 } else {
@@ -125,13 +158,34 @@ class SearchJerseysTask(
         return matchingTeams
     }
 
+    private fun fetchJerseyImageUrls(teamId: String): List<String> {
+        val jerseyUrl = "https://www.thesportsdb.com/api/v1/json/3/lookupequipment.php?id=$teamId"
+        val jerseyResponse = URL(jerseyUrl).readText()
+        val jerseysJson = JSONObject(jerseyResponse).optJSONArray("equipment")
+        val jerseyUrls = mutableListOf<String>()
+        jerseysJson?.let { jsonArray ->
+            for (i in 0 until jsonArray.length()) {
+                val jersey = jsonArray.getJSONObject(i)
+                val imageUrl = jersey.getString("strEquipment")
+                jerseyUrls.add(imageUrl)
+            }
+        }
+        return jerseyUrls
+    }
+
+
+
     companion object {
         private const val TAG = "SearchJerseysTask"
     }
 
-    override fun onPostExecute(result: List<Pair<String, String>>) {
+    override fun onPostExecute(result: List<TeamWithJersey>) {
         super.onPostExecute(result)
         callback(result)
     }
 }
+
+data class TeamWithJersey(val teamName: String, val jerseyImageUrls: List<String>)
+
+
 
