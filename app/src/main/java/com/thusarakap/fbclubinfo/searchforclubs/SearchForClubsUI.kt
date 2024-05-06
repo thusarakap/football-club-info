@@ -15,12 +15,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.thusarakap.fbclubinfo.database.Club
 import com.thusarakap.fbclubinfo.database.DatabaseIO
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import android.graphics.BitmapFactory
 import androidx.compose.runtime.saveable.rememberSaveable
-import java.net.URL
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun SearchForClubsUI(navController: NavController) {
@@ -38,15 +35,17 @@ fun SearchForClubsUI(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Search For Clubs")
+        Spacer(modifier = Modifier.height(65.dp))
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Text("Search For Clubs", fontWeight = FontWeight.Bold)
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = searchText,
             onValueChange = { searchText = it },
             label = { Text("Enter Club Name or League") },
-            modifier = Modifier.width(250.dp)
+            modifier = Modifier.width(300.dp)
         )
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -72,7 +71,7 @@ fun SearchForClubsUI(navController: NavController) {
             )
             val bitmapState = rememberSaveable { mutableStateOf(null as android.graphics.Bitmap?) }
             coroutineScope.launch {
-                bitmapState.value = loadBitmapFromURL(club.strTeamLogo)
+                bitmapState.value = loadImageFromURL(club.strTeamLogo)
             }
             bitmapState.value?.let { bitmap ->
                 Image(
@@ -85,16 +84,3 @@ fun SearchForClubsUI(navController: NavController) {
     }
 }
 
-suspend fun loadBitmapFromURL(url: String) = withContext(Dispatchers.IO) {
-    try {
-        val url = URL(url)
-        val connection = url.openConnection()
-        connection.doInput = true
-        connection.connect()
-        val input = connection.getInputStream()
-        BitmapFactory.decodeStream(input)
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
-}
