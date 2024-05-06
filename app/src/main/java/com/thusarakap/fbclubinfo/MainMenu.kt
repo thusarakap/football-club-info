@@ -11,8 +11,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.thusarakap.fbclubinfo.database.SaveInitialLeagues
@@ -31,6 +33,10 @@ fun MainMenu(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text("Football Club Info", fontWeight = FontWeight.Bold, fontSize = 32.sp)
+
+        Spacer(modifier = Modifier.height(120.dp))
+
         Button(
             onClick = {SaveInitialLeagues()},
             modifier = Modifier.width(250.dp)) {
