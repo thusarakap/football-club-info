@@ -1,8 +1,6 @@
 package com.thusarakap.fbclubinfo
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -19,6 +17,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.thusarakap.fbclubinfo.database.SaveInitialLeagues
 
+// MainMenu object containing routes
 object MainMenu {
     const val MainMenuRoute = "MainMenu"
     const val SearchByLeagueUIRoute = "SearchByLeagueUI"
@@ -26,41 +25,52 @@ object MainMenu {
     const val WebJerseySearchUIRoute = "WebJerseySearchUI"
 }
 
+// Main menu UI
 @Composable
 fun MainMenu(navController: NavController) {
+    // Column layout
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // App Name
         Text("Football Club Info", fontWeight = FontWeight.Bold, fontSize = 32.sp)
 
+        // Spacer
         Spacer(modifier = Modifier.height(120.dp))
 
+        // Add Leagues to DB button
         Button(
             onClick = {SaveInitialLeagues()},
             modifier = Modifier.width(250.dp)) {
             Text("Add Leagues to DB")
         }
 
+        // Spacer
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Search for Clubs By League button
         Button(
             onClick = { navController.navigate(MainMenu.SearchByLeagueUIRoute) },
             modifier = Modifier.width(250.dp)) {
             Text("Search for Clubs By League")
         }
 
+        // Spacer
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Search for Clubs button
         Button(
             onClick = { navController.navigate(MainMenu.SearchForClubsUIRoute) },
             modifier = Modifier.width(250.dp)) {
             Text("Search for Clubs")
         }
 
+        // Spacer
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Search for Jerseys Online button
         Button(
             onClick = { navController.navigate(MainMenu.WebJerseySearchUIRoute) },
             modifier = Modifier.width(250.dp)) {
@@ -69,6 +79,7 @@ fun MainMenu(navController: NavController) {
     }
 }
 
+// Main menu preview
 @Preview(showBackground = true)
 @Composable
 fun MainMenuPreview() {
