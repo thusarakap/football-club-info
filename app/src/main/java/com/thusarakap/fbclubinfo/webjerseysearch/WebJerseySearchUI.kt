@@ -15,13 +15,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
+// API jersey search UI
 @Composable
 fun WebJerseySearchUI(navController: NavController) {
+    // Variables for search and teams matching search
     var searchText by rememberSaveable { mutableStateOf("") }
-    var matchingTeams by remember { mutableStateOf<List<TeamWithJersey>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(false) }
+    var matchingTeams by rememberSaveable { mutableStateOf<List<TeamWithJersey>>(emptyList()) }
+    var isLoading by rememberSaveable { mutableStateOf(false) }
+
     val scrollState = rememberScrollState()
 
+    // Column layout
     Column(
         modifier = Modifier
             .verticalScroll(state = scrollState)
@@ -29,47 +33,61 @@ fun WebJerseySearchUI(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
+        // Add space at the top
         Spacer(modifier = Modifier.height(60.dp))
 
         Text("Search for Jerseys Online", fontWeight = FontWeight.Bold)
 
+        // Spacer
         Spacer(modifier = Modifier.height(15.dp))
 
+        // Search box
         OutlinedTextField(
             value = searchText,
-            onValueChange = { searchText = it },
+            onValueChange = { searchText = it }, // Update search text on value change
             label = { Text("Enter Club Name or League") }
         )
 
+        // Spacer
         Spacer(modifier = Modifier.height(15.dp))
 
+        // Search button
         Button(
             onClick = {
-                // Perform search when button is clicked
+                // Set loading indicator to true before initiating search
                 isLoading = true
+                // Initiate search
                 searchJerseys(searchText) { teams ->
                     matchingTeams = teams
+                    // Set loading indicator to false after search completes
                     isLoading = false
                 }
             },
+            // Set button width
             modifier = Modifier.width(250.dp)
         ) {
             Text("Search")
         }
 
+        // Spacer
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Display loading indicator if search is in progress
+        // Display loading indicator if searching
         if (isLoading) {
+            // Spacer for loading circle
             Spacer(modifier = Modifier.height(250.dp))
-            CircularProgressIndicator(modifier = Modifier.size(50.dp))
+            // Display loading circle
+            CircularProgressIndicator(modifier = Modifier.size(50.dp)) // Display circular progress indicator
         } else {
             // Display matching team names, IDs, and jersey thumbnails
             Column {
+                // Iterate over matching teams and display jersey
                 matchingTeams.forEach { team ->
                     Spacer(modifier = Modifier.width(20.dp))
+                    // Display team name
                     Text(team.teamName)
                     Row {
+                        // Display jersey thumbnails
                         team.jerseyImageUrls.forEach { imageUrl ->
                             LoadImageFromUrl(imageUrl = imageUrl)
                         }
@@ -79,4 +97,3 @@ fun WebJerseySearchUI(navController: NavController) {
         }
     }
 }
-
