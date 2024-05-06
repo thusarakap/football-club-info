@@ -10,12 +10,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.thusarakap.fbclubinfo.database.Club
-import com.thusarakap.fbclubinfo.database.DatabaseIO
+import com.thusarakap.fbclubinfo.database.saveClubsToDatabase
 import kotlinx.coroutines.launch
 
 @Composable
@@ -34,9 +34,11 @@ fun SearchByLeagueUI(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Search by League")
+        Spacer(modifier = Modifier.height(60.dp))
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Text("Search by League", fontWeight = FontWeight.Bold)
+
+        Spacer(modifier = Modifier.height(15.dp))
 
         OutlinedTextField(
             value = leagueName,
@@ -61,27 +63,7 @@ fun SearchByLeagueUI(navController: NavController) {
         Button(
             onClick = {
                 coroutineScope.launch {
-                    val clubs = clubDetails.split("\n\n").map { clubDetail ->
-                        val details = clubDetail.split("\n").map { it.split(": ").last() }
-                        Club(
-                            idTeam = details[0],
-                            name = details[1],
-                            strTeamShort = details[2],
-                            strAlternate = details[3],
-                            intFormedYear = details[4],
-                            strLeague = details[5],
-                            idLeague = details[6],
-                            strStadium = details[7],
-                            strKeywords = details[8],
-                            strStadiumThumb = details[9],
-                            strStadiumLocation = details[10],
-                            intStadiumCapacity = details[11],
-                            strWebsite = details[12],
-                            strTeamJersey = details[13],
-                            strTeamLogo = details[14]
-                        )
-                    }
-                    DatabaseIO.addClubsToDB(clubs)
+                    saveClubsToDatabase(clubDetails)
                 }
             },
             modifier = Modifier.width(250.dp)
@@ -98,6 +80,8 @@ fun SearchByLeagueUI(navController: NavController) {
         )
     }
 }
+
+
 
 @Preview(showBackground = true)
 @Composable
