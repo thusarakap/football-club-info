@@ -1,6 +1,5 @@
 package com.thusarakap.fbclubinfo.database
 
-import android.app.Application
 import android.content.Context
 import android.util.Log
 import androidx.room.ColumnInfo
