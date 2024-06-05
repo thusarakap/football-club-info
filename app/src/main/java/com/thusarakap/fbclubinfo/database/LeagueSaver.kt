@@ -4,7 +4,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+// Function to save initial hardcoded leagues to the database
 fun SaveInitialLeagues() {
+    // List of leagues with details
     val leagues = listOf(
         League(4328, "English Premier League", "Soccer", "Premier League, EPL"),
         League(4329, "English League Championship", "Soccer", "Championship"),
@@ -30,6 +32,7 @@ fun SaveInitialLeagues() {
         League(4359, "Chinese Super League", "Soccer", "")
     )
 
+    // Launch coroutine in IO context to add leagues to the database
     CoroutineScope(Dispatchers.IO).launch {
         DatabaseIO.addLeaguesToDB(leagues)
     }
