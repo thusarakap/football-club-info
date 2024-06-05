@@ -41,7 +41,7 @@ fun SearchByLeagueUI(navController: NavController) {
         Spacer(modifier = Modifier.height(60.dp))
 
         // Title
-        Text("Search by League", fontWeight = FontWeight.Bold)
+        Text("Search for Clubs by League", fontWeight = FontWeight.Bold)
 
         // Spacer
         Spacer(modifier = Modifier.height(15.dp))
@@ -49,9 +49,10 @@ fun SearchByLeagueUI(navController: NavController) {
         // Search box
         OutlinedTextField(
             value = leagueName,
-            onValueChange = { leagueName = it }, // Update league name on value change
+            // Update league name on value change
+            onValueChange = { leagueName = it },
             label = { Text("Enter League Name") },
-            modifier = Modifier.width(250.dp) // Set text field width
+            modifier = Modifier.width(250.dp)
         )
 
         // Spacer
